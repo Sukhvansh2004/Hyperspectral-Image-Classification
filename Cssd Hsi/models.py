@@ -8,8 +8,9 @@ class SpeFE(nn.Module):
         assert spectral_dim is not None
         self.bn = nn.BatchNorm3d(in_channels)
         self.dilate = nn.Conv3d(in_channels, 64, kernel_size=(3,1,1), dilation=(3,1,1), stride=(3,1,1), padding=(2,0,0))
-        k = (spectral_dim + 2 - 1) // 3
-        self.wide = nn.Conv3d(64, 256, kernel_size=(k,1,1), groups=2)
+        self.spectral_len = spectral_dim // 3
+        self.wide = nn.Conv3d(64, 256, kernel_size=(self.spectral_len,1,1), groups=2)
+        
     def forward(self, x):
         x = self.bn(x)
         x = self.dilate(x)
@@ -17,26 +18,44 @@ class SpeFE(nn.Module):
         return x.squeeze(2)
 
 class SpeFR(nn.Module):
+    """
+    Spectral Feature Refiner:
+    - learnable structuring element -> dilation -> attention -> max
+    """
     def __init__(self, channels, se_size=(3,3)):
         super().__init__()
-        w,h = se_size
-        self.SE = nn.Parameter(torch.randn(w*h))
-        self.attn_conv = nn.Conv3d(channels, channels, kernel_size=1)
+        w, h = se_size
         self.w, self.h = w, h
-    def forward(self, x):
-        B,C,W,H = x.shape
-        x3d = x.unsqueeze(2)
-        se = torch.sigmoid(self.SE)
-        pad_w, pad_h = self.w//2, self.h//2
-        x_pad = F.pad(x3d, (pad_h,pad_h, pad_w,pad_w))
-        blocks = x_pad.unfold(3, self.w, 1).unfold(4, self.h,1)
-        blocks = blocks.contiguous().view(B, C, self.w*self.h, 1, W, H)
-        weighted = blocks * se.view(1,1,-1,1,1,1)
-        attn = torch.sigmoid(self.attn_conv(weighted.view(B,C,1,W,H)))
-        weighted = weighted * attn.unsqueeze(2)
-        out,_ = weighted.max(dim=2)
-        return out.squeeze(2)
+        # structuring element parameters
+        self.SE = nn.Parameter(torch.randn(w * h))
+        # attention conv: operate over blocks as depth dimension
+        self.attn_conv = nn.Conv3d(channels, channels, kernel_size=1)
 
+    def forward(self, x):
+        # x: B, C, W, H
+        B, C, W, H = x.shape
+        # expand spatial to 3D: B, C, 1, W, H
+        x3d = x.unsqueeze(2)
+        # compute SE weights
+        se = torch.sigmoid(self.SE)  # shape (w*h,)
+        # pad spatial dims
+        pad_w, pad_h = self.w // 2, self.h // 2
+        x_pad = F.pad(x3d, (pad_h, pad_h, pad_w, pad_w))
+        # extract blocks: B, C, D, 1, W, H where D = w*h
+        blocks = x_pad.unfold(3, self.w, 1).unfold(4, self.h, 1)
+        blocks = blocks.contiguous().view(B, C, self.w * self.h, 1, W, H)
+        # apply structuring element weights
+        weighted = blocks * se.view(1, 1, -1, 1, 1, 1)
+        # remove singleton dim for attention: B, C, D, W, H
+        weighted3d = weighted.squeeze(3)
+        # compute attention per block
+        attn = torch.sigmoid(self.attn_conv(weighted3d))  # B, C, D, W, H
+        # apply attention
+        weighted_attended = weighted3d * attn
+        # aggregate max over block dimension D
+        out, _ = weighted_attended.max(dim=2)
+        return out  # shape B, C, W, H
+    
 class SpaFE(nn.Module):
     def __init__(self, in_channels=256, mid_channels=64):
         super().__init__()

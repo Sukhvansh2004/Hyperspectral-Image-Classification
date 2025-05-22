@@ -15,8 +15,12 @@ class HSIDataset(Dataset):
         data_mat = sio.loadmat(os.path.join(data_path, 'data.mat'))
         label_mat = sio.loadmat(os.path.join(data_path, 'labels.mat'))
         # adjust keys as needed
-        self.data = data_mat.get('data')  # shape (H, W, S)
-        self.labels = label_mat.get('labels')  # shape (H, W)
+        data_keys = [k for k in data_mat.keys() if not k.startswith('__')]
+        self.data = data_mat[data_keys[0]]
+
+        label_keys = [k for k in label_mat.keys() if not k.startswith('__')]
+        self.labels = label_mat[label_keys[0]]
+
         H, W, S = self.data.shape
         assert S == spectral_dim, f"Expected spectral_dim={spectral_dim}, got {S}"
         self.patch_size = patch_size
