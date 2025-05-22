@@ -1,21 +1,25 @@
-Linux
+On Windows ( or CMD), you can run everything as follows:
+Download the data
 
-```
-python train.py --data-path .\data/IndianPines \
-  --spectral-dim 200 \
-  --num-classes 16 \
-  --epochs 100 \
-  --batch-size 32 \
-  --lr 1e-3 \
-  --train-ratio 0.6 \
-  --val-ratio 0.2 \
-  --gpu 0 \
-  --ckpt best.pth
-```
 
-Windows
 
-```
+python .\download_data.py
+Verify the folder structure
+Ensure you have:
+
+
+.\data\IndianPines\
+  ├── data.mat
+  └── labels.mat
+Install dependencies
+
+
+
+python -m pip install torch torchvision scipy requests numpy
+Train the model
+
+
+
 python .\train.py `
   --data-path .\data\IndianPines `
   --spectral-dim 200 `
@@ -28,4 +32,29 @@ python .\train.py `
   --gpu 0 `
   --ckpt .\best.pth
 
-```
+
+(Use the backtick ` at line-ends in  to continue lines; in CMD you’d put it all on one line.)
+(Optional) Run a standalone test
+
+
+
+python .\test.py `
+  --data-path .\data\IndianPines2 `
+  --spectral-dim 200 `
+  --num-classes 16 `
+  --batch-size 32 `
+  --gpu 0 `
+  --ckpt .\best.pth
+
+
+Inference on a single sample
+
+
+
+python .\infer.py `
+  --data-path .\data\IndianPines `
+  --spectral-dim 200 `
+  --num-classes 16 `
+  --ckpt .\best.pth `
+  --index 0 `
+  --gpu 0
