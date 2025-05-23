@@ -8,7 +8,7 @@ from utils import set_seed, save_checkpoint, accuracy, AverageMeter
 def train(args):
     device = torch.device(f"cuda:{args.gpu}" if torch.cuda.is_available() else "cpu")
     set_seed(42)
-    full = HSIDataset(args.data_path, spectral_dim=args.spectral_dim)
+    full = HSIDataset(args.data_path, spectral_dim=args.spectral_dim, data=args.data)
     train_set, val_set, test_set = split_dataset(full, args.train_ratio, args.val_ratio)
     train_loader = DataLoader(train_set, batch_size=args.batch_size, shuffle=True)
     val_loader   = DataLoader(val_set,   batch_size=args.batch_size)
@@ -61,5 +61,6 @@ if __name__ == '__main__':
     parser.add_argument('--val-ratio', type=float, default=0.2)
     parser.add_argument('--gpu', type=int, default=0)
     parser.add_argument('--ckpt', type=str, default='best.pth')
+    parser.add_argument('--data', type=str, default='data')
     args = parser.parse_args()
     train(args)

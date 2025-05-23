@@ -9,11 +9,11 @@ class HSIDataset(Dataset):
     Hyperspectral Dataset loader for .mat files (e.g., Indian Pines)
     Assumes data.mat contains 'indian_pines_corrected' and labels.mat contains 'indian_pines_gt'
     """
-    def __init__(self, data_path, spectral_dim, patch_size=5):
+    def __init__(self, data_path, spectral_dim, data, patch_size=5):
         super().__init__()
         self.spectral_dim = spectral_dim
-        data_mat = sio.loadmat(os.path.join(data_path, 'data.mat'))
-        label_mat = sio.loadmat(os.path.join(data_path, 'labels.mat'))
+        data_mat = sio.loadmat(os.path.join(data_path, data + '.mat'))
+        label_mat = sio.loadmat(os.path.join(data_path, 'PaviaU_gt.mat')) if data == 'PaviaU' else sio.loadmat(os.path.join(data_path, 'labels.mat'))
         # adjust keys as needed
         data_keys = [k for k in data_mat.keys() if not k.startswith('__')]
         self.data = data_mat[data_keys[0]]
