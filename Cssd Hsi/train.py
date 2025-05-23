@@ -4,6 +4,7 @@ from datasets import HSIDataset, split_dataset
 from torch.utils.data import DataLoader
 from models import CSSDModel, cssd_loss
 from utils import set_seed, save_checkpoint, accuracy, AverageMeter
+from tqdm import tqdm
 
 def train(args):
     device = torch.device(f"cuda:{args.gpu}" if torch.cuda.is_available() else "cpu")
@@ -13,41 +14,55 @@ def train(args):
     train_loader = DataLoader(train_set, batch_size=args.batch_size, shuffle=True)
     val_loader   = DataLoader(val_set,   batch_size=args.batch_size)
     test_loader  = DataLoader(test_set,  batch_size=args.batch_size)
+
     model = CSSDModel(args.spectral_dim, args.num_classes).to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
-    best = 0
-    for epoch in range(1, args.epochs+1):
+    best_acc = 0.0
+
+    for epoch in range(1, args.epochs + 1):
         model.train()
-        loss_meter = AverageMeter()
-        for x,y in train_loader:
-            x,y = x.to(device), y.to(device)
-            y_main,y_aux = model(x)
-            loss = cssd_loss(y_main,y_aux,y, model.epsilon, model.tau)
-            optimizer.zero_grad(); loss.backward(); optimizer.step()
-            loss_meter.update(loss.item(), x.size(0))
-        print(f"Epoch {epoch}: Loss={loss_meter.avg:.4f}")
+        train_loss = AverageMeter()
+        loop = tqdm(train_loader, desc=f"Epoch [{epoch}/{args.epochs}] Training", leave=False)
+        for x, y in loop:
+            x, y = x.to(device), y.to(device)
+            y_main, y_aux = model(x)
+            loss = cssd_loss(y_main, y_aux, y, model.epsilon, model.tau)
+
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+
+            train_loss.update(loss.item(), x.size(0))
+            loop.set_postfix(loss=train_loss.avg)
+
+        print(f"Epoch {epoch}/{args.epochs} - Train Loss: {train_loss.avg:.4f}")
+
         model.eval()
-        acc_meter = AverageMeter()
+        val_acc = AverageMeter()
         with torch.no_grad():
-            for x,y in val_loader:
-                x,y = x.to(device), y.to(device)
-                preds,_ = model(x)
-                acc_meter.update(accuracy(preds.argmax(1), y), x.size(0))
-        print(f"Val Acc={acc_meter.avg:.4f}")
-        if acc_meter.avg > best:
-            best = acc_meter.avg
-            save_checkpoint({'state_dict':model.state_dict(), 'optimizer':optimizer.state_dict()}, args.ckpt)
-    # test
+            for x, y in tqdm(val_loader, desc="Validation", leave=False):
+                x, y = x.to(device), y.to(device)
+                preds, _ = model(x)
+                val_acc.update(accuracy(preds.argmax(1), y), x.size(0))
+        print(f"Epoch {epoch}/{args.epochs} - Val Acc: {val_acc.avg:.4f}")
+
+        # Checkpoint
+        if val_acc.avg > best_acc:
+            best_acc = val_acc.avg
+            save_checkpoint({'state_dict': model.state_dict(), 'optimizer': optimizer.state_dict()}, args.ckpt)
+            print(f"Saved best model with Val Acc: {best_acc:.4f}")
+
+    # Final Test
     from utils import load_checkpoint
     load_checkpoint(model, optimizer, args.ckpt, device)
-    acc_meter = AverageMeter()
+    test_acc = AverageMeter()
     model.eval()
     with torch.no_grad():
-        for x,y in test_loader:
-            x,y = x.to(device), y.to(device)
-            preds,_ = model(x)
-            acc_meter.update(accuracy(preds.argmax(1), y), x.size(0))
-    print(f"Test Acc={acc_meter.avg:.4f}")
+        for x, y in tqdm(test_loader, desc="Testing", leave=False):
+            x, y = x.to(device), y.to(device)
+            preds, _ = model(x)
+            test_acc.update(accuracy(preds.argmax(1), y), x.size(0))
+    print(f"Test Accuracy: {test_acc.avg:.4f}")
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

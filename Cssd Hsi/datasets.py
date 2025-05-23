@@ -9,7 +9,7 @@ class HSIDataset(Dataset):
     Hyperspectral Dataset loader for .mat files (e.g., Indian Pines)
     Assumes data.mat contains 'indian_pines_corrected' and labels.mat contains 'indian_pines_gt'
     """
-    def __init__(self, data_path, spectral_dim, data, patch_size=5):
+    def __init__(self, data_path, spectral_dim, data, patch_size=48):
         super().__init__()
         self.spectral_dim = spectral_dim
         data_mat = sio.loadmat(os.path.join(data_path, data + '.mat'))
