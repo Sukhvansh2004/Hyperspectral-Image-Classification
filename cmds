@@ -24,13 +24,13 @@ python .\train.py `
   --data-path .\data\IndianPines `
   --spectral-dim 200 `
   --num-classes 16 `
-  --epochs 100 `
+  --epochs 20 `
   --batch-size 32 `
   --lr 1e-3 `
   --train-ratio 0.6 `
   --val-ratio 0.2 `
   --gpu 0 `
-  --ckpt .\best.pth `
+  --ckpt .\ckpts\IndianPines\non_overlap_10\best.pth `
   --data data
 
 
@@ -47,6 +47,15 @@ python .\test.py `
   --gpu 0 `
   --ckpt ckpts\IndianPines\best.pth `
   --data data
+
+python .\test.py `
+ --data-path .\data\PaviaU\ `
+ --spectral-dim 103 `
+ --num-classes 9 `
+ --batch-size 32 `
+ --gpu 0 `
+ --ckpt best.pth `
+ --data data
 
 
 Inference on a single sample
