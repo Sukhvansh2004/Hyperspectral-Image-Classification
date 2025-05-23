@@ -30,7 +30,8 @@ python .\train.py `
   --train-ratio 0.6 `
   --val-ratio 0.2 `
   --gpu 0 `
-  --ckpt .\best.pth
+  --ckpt .\best.pth `
+  --data data
 
 
 (Use the backtick ` at line-ends in  to continue lines; in CMD you’d put it all on one line.)
@@ -39,12 +40,13 @@ python .\train.py `
 
 
 python .\test.py `
-  --data-path .\data\IndianPines2 `
+  --data-path .\data\IndianPines `
   --spectral-dim 200 `
   --num-classes 16 `
   --batch-size 32 `
   --gpu 0 `
-  --ckpt .\best.pth
+  --ckpt .\best.pth`
+  --data data
 
 
 Inference on a single sample
@@ -57,4 +59,5 @@ python .\infer.py `
   --num-classes 16 `
   --ckpt .\best.pth `
   --index 0 `
-  --gpu 0
+  --gpu 0 `
+  --data data

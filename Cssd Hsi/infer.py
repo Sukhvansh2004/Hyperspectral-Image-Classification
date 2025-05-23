@@ -6,7 +6,7 @@ from utils import load_checkpoint
 
 def infer(args):
     device = torch.device(f"cuda:{args.gpu}" if torch.cuda.is_available() else "cpu")
-    full = HSIDataset(args.data_path, spectral_dim=args.spectral_dim)
+    full = HSIDataset(args.data_path, spectral_dim=args.spectral_dim, data=args.data)
     _,_,test_set = split_dataset(full, args.train_ratio, args.val_ratio)
     model = CSSDModel(args.spectral_dim, args.num_classes).to(device)
     optimizer = torch.optim.Adam(model.parameters())
@@ -27,5 +27,6 @@ if __name__=='__main__':
     parser.add_argument('--train-ratio', type=float, default=0.6)
     parser.add_argument('--val-ratio', type=float, default=0.2)
     parser.add_argument('--gpu', type=int, default=0)
+    parser.add_argument('--data', type=str, default='data')
     args = parser.parse_args()
     infer(args)
