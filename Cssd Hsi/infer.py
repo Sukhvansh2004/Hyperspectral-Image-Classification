@@ -12,7 +12,7 @@ from utils import load_checkpoint
 def infer_full_image(args, bands=(30, 20, 10)):
     device = torch.device(f"cuda:{args.gpu}" if torch.cuda.is_available() else "cpu")
     # Load full data cube and labels
-    data_mat = scipy.io.loadmat(os.path.join(args.data_path, args.data))
+    data_mat = scipy.io.loadmat(os.path.join(args.data_path, args.data_file))
     label_mat = scipy.io.loadmat(os.path.join(args.data_path, args.label_file))
     data_var = [k for k in data_mat.keys() if not k.startswith('__')][0]
     labels_var = [k for k in label_mat.keys() if not k.startswith('__')][0]
@@ -69,7 +69,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--data-path', required=True,
                         help='Folder containing data.mat and labels.mat')
-    parser.add_argument('--data', required=True)
+    parser.add_argument('--data-file', default='data.mat')
     parser.add_argument('--label-file', default='labels.mat')
     parser.add_argument('--spectral-dim', type=int, default=200)
     parser.add_argument('--num-classes', type=int, default=16)
