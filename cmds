@@ -45,7 +45,7 @@ python .\test.py `
   --num-classes 16 `
   --batch-size 32 `
   --gpu 0 `
-  --ckpt .\best.pth`
+  --ckpt ckpts\IndianPines\best.pth `
   --data data
 
 
