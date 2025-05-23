@@ -12,7 +12,7 @@ class HSIDataset(Dataset):
     Loads a single data cube (H×W×S) and its label map (H×W), then extracts
     non-overlapping patches centered at labeled pixels only.
     """
-    def __init__(self, data_path, spectral_dim, data, patch_size=5):
+    def __init__(self, data_path, spectral_dim, data, patch_size=10):
         super().__init__()
         self.spectral_dim = spectral_dim
 

@@ -67,6 +67,5 @@ python .\infer.py `
   --spectral-dim 200 `
   --num-classes 16 `
   --ckpt .\best.pth `
-  --index 0 `
   --gpu 0 `
   --data data
