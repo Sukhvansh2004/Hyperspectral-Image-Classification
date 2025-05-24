@@ -44,6 +44,6 @@ def visualize_hsi(data_path, label_path, bands=(50,30,10)):
 
 if __name__ == '__main__':
     # Default paths
-    data_p = os.path.join('data', 'IndianPines', 'data.mat')
-    lbl_p  = os.path.join('data', 'IndianPines', 'labels.mat')
+    data_p = 'data\PaviaU\data.mat' #os.path.join('data', 'IndianPines', 'data.mat')
+    lbl_p  = 'data\PaviaU\labels.mat' #os.path.join('data', 'IndianPines', 'labels.mat')
     visualize_hsi(data_p, lbl_p)
